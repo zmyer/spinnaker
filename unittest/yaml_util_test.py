@@ -257,6 +257,18 @@ e:
      self.assertEqual(234, bindings.get('def'))
      self.assertEqual(123, bindings.get('indirect'))
 
+  def test_concat(self):
+     bindings = YamlBindings()
+     bindings.import_string(
+        "s: 'TEST'\nmix: a.${s}")
+     self.assertEqual('a.TEST', bindings.get('mix'))
+
+  def test_concat_default(self):
+     bindings = YamlBindings()
+     bindings.import_string(
+        "mix: a.${s:TEST}")
+     self.assertEqual('a.TEST', bindings.get('mix'))
+
   def test_transform_ok(self):
      bindings = YamlBindings()
      bindings.import_dict({'a': {'b': { 'space': 'WithSpace',
@@ -314,6 +326,24 @@ a:
      self.assertEqual([{'elem': True}, {'elem': True}, {'elem': False}, {'elem': False}],
                       bindings.get('root'))
      self.assertEqual(bindings.get('root'), bindings.get('copy'))
+
+  def test_write_bool(self):
+    yaml = 'a: false'
+
+    update_dict = {
+      'a': True
+    }
+    expected = 'a: true'
+
+    fd, temp_path = tempfile.mkstemp()
+    os.write(fd, yaml)
+    os.close(fd)
+    YamlBindings.update_yml_source(temp_path, update_dict)
+
+    with open(temp_path, 'r') as f:
+      self.assertEqual(expected, f.read())
+
+    os.remove(temp_path)
 
   def test_update_yml_source(self):
     yaml = """

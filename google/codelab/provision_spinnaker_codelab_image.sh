@@ -35,9 +35,20 @@ service apache2 stop
 
 set -e
 
+# this allows us to skip any interactive post-install configuration,
+# specifically around keeping defaults for files that were modified.
+export DEBIAN_FRONTEND=noninteractive
+
+# we don't want to update these. see github.com/spinnaker/spinnaker/issues/1279
+# for context.
+SPINNAKER_SUBSYSTEMS="spinnaker-clouddriver spinnaker-deck spinnaker-echo spinnaker-fiat spinnaker-front50 spinnaker-gate spinnaker-igor spinnaker-orca spinnaker-rosco spinnaker"
+
+apt-mark hold $SPINNAKER_SUBSYSTEMS
 # update apt
 apt-get update
-apt-get -y upgrade
+# temporary workaround for where DEBIAN_FRONTEND=noninteractive isn't enough
+apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y upgrade
+apt-mark unhold $SPINNAKER_SUBSYSTEMS
 
 # acquire and configure jenkins
 apt-get install -y git
@@ -84,6 +95,9 @@ server {
 }
 EOF
 service nginx restart
+
+wget https://storage.googleapis.com/codelab-startup-script/first_codelab_boot.sh -O /opt/spinnaker/install/first_codelab_boot.sh
+chmod +x /opt/spinnaker/install/first_codelab_boot.sh
 
 # configure nested properties in igor -- harder than a `sed` one-liner
 curl -s -O https://raw.githubusercontent.com/spinnaker/spinnaker/master/pylib/spinnaker/codelab_config.py
