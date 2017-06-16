@@ -40,6 +40,7 @@ window.spinnakerSettings = {
         region: 'us-central1',
         zone: 'us-central1-f',
       },
+      associatePublicIpAddress: true,
     },
     titan: {
       defaults: {
@@ -50,7 +51,8 @@ window.spinnakerSettings = {
     kubernetes: {
       defaults: {
         account: 'my-kubernetes-account',
-        namespace: 'default'
+        namespace: 'default',
+        proxy: 'localhost:8001'
       },
     }
   },

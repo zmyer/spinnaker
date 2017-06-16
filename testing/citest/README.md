@@ -33,7 +33,7 @@ but a suggestion.
     sudo apt-get install python-pip
     
     # Instal FFI package needed by pyopenssl
-    sudo apt-get install libffi-dev
+    sudo apt-get install libffi-dev libssl-dev python-dev
 
     # Install virtualenv tools  and setup a Virtual Environment.
     pip install virtualenv
@@ -60,8 +60,28 @@ you may need additional tools.
 Platform | Tools | Installation Command
 ---------|-------|---------------------
 Amazon Web Services | awscli | ```sudo apt-get install -y awscli```
+Microsoft Azure | az | [See instructions](https://docs.microsoft.com/cli/azure/install-azure-cli)
 Google Cloud Platform | gcloud | ```curl https://sdk.cloud.google.com | bash```
 Kubernetes | kubectl | [See instructions](http://kubernetes.io/docs/user-guide/prereqs/)
+OpenStack | openstack | [See instructions](https://docs.openstack.org/user-guide/common/cli-install-openstack-command-line-clients.html)
+
+
+## Defining Environment Variables
+### OpenStack
+
+Below mentioned environment variables are needed in order for OpenStack client to work.
+ 
+Variable | Description
+---------|------------
+OS_AUTH_URL | Keystone authentication server URL. (https://identityHost:portNumber/version)
+OS_PROJECT_ID | OpenStack project ID.
+OS_PROJECT_NAME | OpenStack project name.
+OS_USER_DOMAIN_NAME | OpenStack user domain name.
+OS_USERNAME | OpenStack user name.
+OS_PASSWORD | OpenStack user password.
+OS_REGION_NAME | OpenStack region name.
+OS_IDENTITY_API_VERSION | Keystone service endpoint version number.
+OS_PROJECT_DOMAIN_NAME | OpenStack project domain name.
 
 
 ## Install Spinnaker citest Dependencies
@@ -175,6 +195,10 @@ when creating test instances requiring an image.
 test_aws_vpc_id' | The default AWS VpcId to use when creating test resources.
 test_aws_security_group_id: The default AWS SecurityGroupId to use when
 creating test resources.
+test_azure_rg_location | The azure location where the test resources should be created. Default to westus.
+azure_storage_account_key | The key used to read the content from the Azure storage account used by Spinnaker when Spinnaker is configured to use Azure Storage for front50.
+azure_storage_account_name | The name of the Azure storage account used by Spinnaker when Spinnaker is configured to use Azure Storage for front50.
+
 
 
 ### Account Information
@@ -183,6 +207,8 @@ Flag | Description
 spinnaker_google_credentials | The name of the Spinnaker [clouddriver] account that you wish to use for Google operations. If not specified, this will use the configured primary account.
 spinnaker_kubernetes_credentials |  The name of the Spinnaker [clouddriver] account that you wish to use for Kubernetes operations. If not specified, this will use the configured primary account.
 spinnaker_aws_credentials |  The name of the Spinnaker [clouddriver] account that you wish to use for Amazon Web Services operations. If not specified, this will use the configured primary account.
+spinnaker_os_account | The name of the Spinnaker [clouddriver] account that you wish to use for OpenStack operations. If not specified, this will use the configured primary account.
+spinnaker_azure_account | The name of the Spinnaker [clouddriver] account that you wish to use for the Azure operations. If not specified, this will use the configured primary account.
 
 
 ## Standard Parameters For Configuring Observers
@@ -190,7 +216,8 @@ Flag | Description
 -----|------------
 gce_credentials_path | The path to a service account JSON credentials file used by the test to verify effects on GCE. The permissions needed on the account may vary depending on what the test is doing. You can use the same service account that you have configured spinnaker with,
 aws_profile | The name of the awscli profile to use when verifying effects on AWS. The permissions needed in the profile may vary depending on what the test is doing. You can use the same AWS credentials as those you configured spinnaker to use.
-
+os_cloud | The name of the cloud. OpenStack will look for a clouds.yaml file that contains a cloud configuration to use for authentication.
+azure | For Azure, you must login with the following command on the test environment ```az login -u SPN_Client_ID -p SPN_Application_key --tenant Tenant_Name --service-principal``` prior to test execution.
 
 
 ## Typical Invocations
@@ -232,6 +259,13 @@ things, and lastly, additional "observer" things.
 
 ### Kubernetes
         None (when on GCE)
+
+### OpenStack
+        --os_cloud=$OS_CLOUD
+
+### Azure
+        --azure_storage_account_key=Key to access the storage account used by Spinnaker
+        --azure_storage_account_name=Name of the Azure storage account used by Spinnaker
 
 # Usage Examples
 
@@ -281,3 +315,4 @@ then:
 Note that `aws_kato_test.py` is written to specifically test managing AWS
 instances regardless of where Spinnaker is running from. So you can run
 it against a GCE deployment, but will still be observing changes on AWS.
+

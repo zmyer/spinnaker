@@ -135,12 +135,11 @@ class GoogleKatoTestScenario(sk.SpinnakerTestScenario):
     # Put the instance in zones. Force one zone to be different
     # to ensure we're testing zone placement. We arent bothering
     # with different regions at this time.
-    self.use_instance_zones = [
-        self.bindings['TEST_GCE_ZONE'],
-        'us-central1-b',
-        self.bindings['TEST_GCE_ZONE']]
-    if self.use_instance_zones[0] == self.use_instance_zones[1]:
-      self.use_instance_zones[1] = 'us-central1-c'
+    test_zone = self.bindings['TEST_GCE_ZONE']
+    other_zone = self.bindings['TEST_GCE_REGION'] + (
+        '-b' if test_zone[-1] != 'b' else '-a')
+
+    self.use_instance_zones = [test_zone, other_zone, test_zone]
 
     # Give the instances images and machine types. Again we're forcing
     # one to be different to ensure that we're using the values.
@@ -579,8 +578,7 @@ class GoogleKatoTestScenario(sk.SpinnakerTestScenario):
 
       # Produce the list of images that we expect to receive from spinnaker
       # (visible to the primary service account).
-      spinnaker_account = self.agent.deployed_config.get(
-          'providers.google.primaryCredentials.name')
+      spinnaker_account = self.bindings['SPINNAKER_GOOGLE_ACCOUNT']
 
       logger.debug('Configured with Spinnaker account "%s"', spinnaker_account)
       expect_images = [{'account': spinnaker_account, 'imageName': image['name']}
@@ -594,8 +592,8 @@ class GoogleKatoTestScenario(sk.SpinnakerTestScenario):
     builder = HttpContractBuilder(self.agent)
     (builder.new_clause_builder('Has Expected Images')
        .get_url_path('/gce/images/find')
-       .add_constraint(jp.PathPredicate(jp.DONT_ENUMERATE_TERMINAL,
-                                        jp.EQUIVALENT(expect_images))))
+       .contains_match([jp.DICT_SUBSET(image_entry) for image_entry in expect_images],
+                       match_kwargs={'strict':True, 'unique':True}))
 
     return st.OperationContract(
         NoOpOperation('List Available Images'),
@@ -658,7 +656,7 @@ class GoogleKatoIntegrationTest(st.AgentTestCase):
     # with the defaults here.
     self.run_test_case(self.scenario.delete_load_balancer(), max_retries=5)
 
-  def test_available_images(self):
+  def Xtest_available_images(self):
     self.run_test_case(self.scenario.list_available_images())
 
 
